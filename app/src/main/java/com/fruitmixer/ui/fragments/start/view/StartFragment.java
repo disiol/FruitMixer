@@ -1,18 +1,28 @@
 package com.fruitmixer.ui.fragments.start.view;
 
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 
 import com.fruitmixer.R;
@@ -21,6 +31,8 @@ import com.fruitmixer.manedger.PreferencesManager;
 import com.fruitmixer.routers.main.MainActivityRouter;
 import com.fruitmixer.ui.base.BaseBindingFragment;
 import com.fruitmixer.ui.fragments.start.presenter.StartPresenter;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -34,6 +46,14 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     private SharedPreferences forRanWeb;
     private SharedPreferences forRanGame;
     private boolean settingsBoolean;
+
+    private static final int CAMERA_REQUEST = 10;
+    private Button permissionButton;
+    private Button torchButton;
+    private boolean flashLightStatus = false;
+    private Camera mCamera;
+    private Camera.Parameters mParameters;
+
 
     @Inject
     PreferencesManager preferencesManager;
@@ -109,14 +129,7 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
 
     }
 
-    private void restartApp() {
-        Intent mStartActivity = new Intent(getContext(), getActivity().getClass());
-        int mPendingIntentId = 123456;
-        PendingIntent mPendingIntent = PendingIntent.getActivity(getContext(), mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-        AlarmManager mgr = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
-        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-        getActivity().finish();
-    }
+
 
     @Override
     public void showGame(MainActivityRouter mainActivityRouter) {
@@ -126,11 +139,113 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     }
 
     private void showGameFragment() {
-//     TODO   Intent intent = new Intent(getActivity(), AndroidLauncher.class);
-//        getActivity().startActivity(intent);
-//        getActivity().finish();
+        final boolean hasCameraFlash = getActivity().getPackageManager().
+                hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+        boolean isEnabled =
 
+                ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
+                        == PackageManager.PERMISSION_GRANTED;
+
+
+
+
+        torchButton = getActivity().findViewById(R.id.torch_button);
+        torchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
+
+                if (hasCameraFlash) {
+                    if (flashLightStatus) {
+                        flashLightOff();
+                    } else {
+                        flashLightOn();
+                    }
+                } else {
+                    Toast.makeText(getActivity(), "No flash available on your device",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
+
+    private void flashLightOn() {
+        CameraManager cameraManager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+        torchButton.setText("ON");
+        torchButton.setBackground(getResources().getDrawable(R.drawable.oval_button_grean));
+
+        try {
+            String cameraId = cameraManager.getCameraIdList()[0];
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                cameraManager.setTorchMode(cameraId, true);
+            } else {
+                mCamera = Camera.open();
+                mParameters = mCamera.getParameters();
+                List flashModesList = mParameters
+                        .getSupportedFlashModes();
+                if (flashModesList
+                        .contains(Camera.Parameters.FLASH_MODE_TORCH)) {
+                    mParameters
+                            .setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                    mCamera.setParameters(mParameters);
+                    mCamera.startPreview();
+                }
+
+            }
+            flashLightStatus = true;
+        } catch (CameraAccessException e) {
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case CAMERA_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                } else {
+                    Toast.makeText(getActivity(),
+                            "Permission Denied for the Camera", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    private void flashLightOff() {
+
+        torchButton.setText("OFF");
+        torchButton.setBackground(getResources().getDrawable(R.drawable.oval_button_read));
+
+        CameraManager cameraManager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                String cameraId = cameraManager.getCameraIdList()[0];
+                cameraManager.setTorchMode(cameraId, false);
+                flashLightStatus = false;
+
+            } else { // выключаем вспышку
+                mParameters
+                        .setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                mCamera.setParameters(mParameters);
+                mCamera.stopPreview();
+                mCamera.release();
+                mCamera = null;
+
+
+            }
+
+            flashLightStatus = false;
+
+
+        } catch (CameraAccessException e) {
+        }
+    }
+
+
 
     @Override
     public void showMessage(String message) {
