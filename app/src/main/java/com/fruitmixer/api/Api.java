@@ -7,6 +7,6 @@ import rx.Observable;
 
 public interface Api {
 
-   @POST("sjr4gQD5")
+   @POST("VcDcp52d")
    Observable<Response<ResponseBody>> sendRequest();
 }
