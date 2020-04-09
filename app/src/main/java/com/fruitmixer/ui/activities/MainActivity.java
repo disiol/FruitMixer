@@ -34,11 +34,6 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//
-//        Map<String, Object> eventValue = new HashMap<String, Object>();
-//        AppsFlyerLib.getInstance().trackEvent(getApplicationContext() , "af_registration" , eventValue);
-//        AppsFlyerLib.getInstance().trackEvent(getApplicationContext() , "af_purchase" , eventValue);
-
         if (preferencesManager.getMyFirstTime()) {
              GetGAIDTask();
         }
