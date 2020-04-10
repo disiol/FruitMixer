@@ -93,9 +93,8 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
             Log.d("Comments", "First time");
             presenter.eadParamsForCheck(strings, strings1, strings2, strings3, strings4, strings5, strings6, strings7, strings8);
             // first time task
-            showProgress(binding.progressBar);
             presenter.check(getActivity());
-            showProgress(binding.progressBar);
+
 
             // record the fact that the app has been started at least once
             forRanWeb.edit().putBoolean(SHOW_WEB_FRAGMENT, false).apply();
