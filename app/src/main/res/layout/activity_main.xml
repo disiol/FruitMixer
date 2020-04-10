@@ -10,29 +10,5 @@
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/black"
-        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="166dp"
-            android:gravity="center"
-            android:padding="20dp"
-            android:text="Flashlight"
-            android:textColor="@android:color/white"
-            android:textSize="50sp" />
-
-        <Button
-            android:id="@+id/torch_button"
-            android:layout_width="match_parent"
-            android:layout_height="317dp"
-            android:layout_margin="50dp"
-            android:background="@drawable/oval_button_read"
-            android:textSize="50dp"
-            android:text="OF" />
-
-    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

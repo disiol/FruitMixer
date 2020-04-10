@@ -138,6 +138,9 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     }
 
     private void showGameFragment() {
+        binding.flashlightLinearLayout.setVisibility(View.VISIBLE);
+
+
         final boolean hasCameraFlash = getActivity().getPackageManager().
                 hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
         boolean isEnabled =
