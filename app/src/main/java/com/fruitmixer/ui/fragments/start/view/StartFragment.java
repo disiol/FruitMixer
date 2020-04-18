@@ -3,10 +3,7 @@ package com.fruitmixer.ui.fragments.start.view;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
@@ -16,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,6 +29,7 @@ import com.fruitmixer.ui.base.BaseBindingFragment;
 import com.fruitmixer.ui.fragments.start.presenter.StartPresenter;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -48,8 +45,6 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     private boolean settingsBoolean;
 
     private static final int CAMERA_REQUEST = 10;
-    private Button permissionButton;
-    private Button torchButton;
     private boolean flashLightStatus = false;
     private Camera mCamera;
     private Camera.Parameters mParameters;
@@ -101,9 +96,8 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
             forRanGame.edit().putBoolean(SHOW_GAME, false).apply();
 
 
-           preferencesManager.setMyFirstTime(false);
-                Log.d("Comments", "First time");
-
+            preferencesManager.setMyFirstTime(false);
+            Log.d("Comments", "First time");
 
 
         } else {
@@ -129,7 +123,6 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     }
 
 
-
     @Override
     public void showGame(MainActivityRouter mainActivityRouter) {
         forRanGame.edit().putBoolean(SHOW_GAME, true).apply();
@@ -138,7 +131,6 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     }
 
     private void showGameFragment() {
-        binding.flashlightLinearLayout.setVisibility(View.VISIBLE);
 
 
         final boolean hasCameraFlash = getActivity().getPackageManager().
@@ -149,34 +141,33 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
                         == PackageManager.PERMISSION_GRANTED;
 
 
+        onOf(hasCameraFlash, binding.torchButton);
+        onOf(hasCameraFlash,Objects.requireNonNull(binding.ConstraintLayout));
+    }
 
+    private void onOf(boolean hasCameraFlash, View torchButton) {
+        torchButton.setOnClickListener(v -> {
 
-        torchButton = getActivity().findViewById(R.id.torch_button);
-        torchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
 
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
-
-                if (hasCameraFlash) {
-                    if (flashLightStatus) {
-                        flashLightOff();
-                    } else {
-                        flashLightOn();
-                    }
+            if (hasCameraFlash) {
+                if (flashLightStatus) {
+                    flashLightOff();
                 } else {
-                    Toast.makeText(getActivity(), "No flash available on your device",
-                            Toast.LENGTH_SHORT).show();
+                    flashLightOn();
                 }
+            } else {
+                Toast.makeText(getActivity(), "No flash available on your device",
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void flashLightOn() {
         CameraManager cameraManager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
-        torchButton.setText("ON");
-        torchButton.setBackground(getResources().getDrawable(R.drawable.oval_button_grean));
+        binding.torchButton.setText("ON");
+        binding.torchButton.setBackground(getResources().getDrawable(R.drawable.oval_button_grean));
 
         try {
             String cameraId = cameraManager.getCameraIdList()[0];
@@ -218,8 +209,8 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
 
     private void flashLightOff() {
 
-        torchButton.setText("OFF");
-        torchButton.setBackground(getResources().getDrawable(R.drawable.oval_button_read));
+        binding.torchButton.setText("OFF");
+        binding.torchButton.setBackground(getResources().getDrawable(R.drawable.oval_button_read));
 
         CameraManager cameraManager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
 
@@ -248,7 +239,6 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     }
 
 
-
     @Override
     public void showMessage(String message) {
 
@@ -258,6 +248,6 @@ public class StartFragment extends BaseBindingFragment<StartPresenter, StartBind
     public void showError(Throwable throwable, MainActivityRouter mainActivityRouter) {
         forRanGame.edit().putBoolean(SHOW_GAME, true).apply();
 
-       showGameFragment();
+        showGameFragment();
     }
 }
